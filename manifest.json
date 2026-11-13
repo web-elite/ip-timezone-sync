@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "IP Timezone Sync",
-  "version": "1.0.1",
-  "description": "Synchronize the browser's JavaScript timezone with the timezone reported for its current public IP.",
-  "permissions": ["storage", "alarms", "tabs"],
+  "version": "1.0.2",
+  "description": "Apply the public-IP timezone to selected JavaScript Date and Intl APIs.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs"
+  ],
   "host_permissions": [
     "https://ipwho.is/*",
     "https://ipapi.co/*",
@@ -15,19 +19,41 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "IP Timezone Sync"
+    "default_title": "IP Timezone Sync",
+    "default_icon": {
+      "16": "icons/icon128.png",
+      "32": "icons/icon128.png",
+      "48": "icons/icon128.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon128.png",
+    "32": "icons/icon128.png",
+    "48": "icons/icon128.png",
+    "128": "icons/icon128.png"
   },
   "options_page": "options.html",
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["bridge.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     },
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["main-world.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "main-world.js"
+      ],
       "run_at": "document_start",
       "all_frames": true,
       "world": "MAIN"

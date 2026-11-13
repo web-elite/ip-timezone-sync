@@ -1,39 +1,36 @@
 # IP Timezone Sync
 
-A Manifest V3 extension for Chromium-based browsers that detects the timezone associated with the browser's public IP address and applies it to selected JavaScript date and internationalization APIs on web pages.
+A Manifest V3 Chromium extension that looks up the IANA timezone associated with the public IP used by the extension service worker and applies it to selected JavaScript Date and Intl APIs.
 
 ## Features
+- IP timezone lookup through ipwho.is, with ipapi.co fallback.
+- Manual and scheduled refresh modes.
+- Default timezone for Intl.DateTimeFormat unless the caller explicitly supplies one.
+- Local Date getters, string/locale formatting, and local setters.
+- Custom extension icon.
 
-- Detects the public IP timezone using [ipwho.is](https://ipwho.is/) with [ipapi.co](https://ipapi.co/) as a fallback.
-- Supports manual checks and scheduled checks (on browser startup, on new tabs, hourly, or every six hours).
-- Applies the selected IANA timezone to `Intl.DateTimeFormat` when the caller does not explicitly provide a timezone.
-- Overrides selected local `Date` getters and date/string formatting methods.
-- Includes a popup and options page for status and settings.
-
-## Install (developer mode)
-
+## Install
 1. Download or clone this repository.
-2. Open `chrome://extensions` (or `edge://extensions` / `brave://extensions`).
-3. Enable **Developer mode**.
-4. Select **Load unpacked** and choose the project folder.
+2. Open chrome://extensions (or the equivalent page in Edge/Brave).
+3. Enable Developer mode.
+4. Select Load unpacked and choose the project folder.
 
-## How it works
+## Startup timing
+The page-world shim starts at document_start. The isolated-world bridge obtains the saved timezone asynchronously from extension storage and forwards it to the page world. A page that executes timezone-sensitive JavaScript immediately at startup may observe the browser timezone before the update arrives. The bridge uses a readiness handshake, but cannot guarantee that every page script waits for the setting.
 
-The extension service worker queries the timezone lookup providers. The resulting IANA timezone is stored in extension storage and sent to matching tabs. A content-script bridge passes the setting into the page's main JavaScript world, where the extension patches selected `Date` and `Intl` APIs.
+## Workers and frames
+The shim is installed in matching frames where Chromium permits content scripts. Worker globals are not rewritten. Rewriting arbitrary worker URLs as Blob URLs can break module imports, relative paths, CORS, CSP, and origin semantics, so this version leaves native Worker and SharedWorker loading untouched. Service workers are outside the content-script injection model.
 
-## Privacy
+## Privacy and limitations
+- Does not change the operating-system or browser-profile timezone.
+- Lookup providers receive the public IP used by the extension service worker; this may differ from a tab-specific proxy or VPN route.
+- IP geolocation is approximate.
+- JavaScript built-in modifications are observable. No fingerprint-resistance, stealth, or fraud-detection bypass is promised.
+- Some browser APIs, workers, service workers, native surfaces, and early startup observations remain outside its coverage.
 
-The timezone lookup providers receive the public IP address used by the extension's network request. The lookup is performed by the extension service worker, so the observed IP may differ from the IP used by a particular tab if the browser, operating system, or another application uses different proxy or VPN routing. Review the providers' privacy policies before use.
-
-## Limitations
-
-- This does **not** change the operating-system timezone or the browser's native timezone configuration.
-- IP geolocation is approximate. VPN exits, mobile networks, corporate gateways, and countries with multiple timezones can produce an unexpected result.
-- This is JavaScript API compatibility behavior, not a guarantee of complete fingerprint resistance or undetectability.
-- Not every browser surface or date/time API is patched. Worker behavior has limitations, especially for module workers, cross-origin restrictions, and Blob-created workers.
-- Page scripts may detect modified JavaScript built-ins, and sites can use other signals to infer the device's actual timezone or location.
-- Validate the extension against your target browser versions and websites before relying on it.
+## Tests
+Run the Node.js smoke tests with: node tests/timezone.test.cjs
+They cover local getters/setters, default Intl timezone, explicit timezone preservation, and a daylight-saving transition. They do not prove compatibility with every browser or site.
 
 ## Version
-
-Current extension version: **1.0.1**.
+**1.0.2**
