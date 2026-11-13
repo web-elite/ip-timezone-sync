@@ -8,7 +8,7 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(require.resolve("../main-world.js"),"utf8"),sandbox);
 const setZone=timezone=>{for(const fn of listeners.message||[])fn({source:sandbox,data:{__iptz_sync__:true,timezone}});};
 setZone("Asia/Tehran");
-const D=sandbox.Date,I=sandbox.Intl;
+const D=vm.runInContext("Date",sandbox),I=vm.runInContext("Intl",sandbox);
 const d=new D("2026-01-01T00:00:00.000Z");
 assert.equal(d.getTimezoneOffset(),-210);
 assert.equal(d.getHours(),3);
