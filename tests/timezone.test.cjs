@@ -41,7 +41,7 @@ editable.setHours(4);
 assert.equal(editable.getHours(),4);
 assert.equal(editable.getMinutes(),30);
 assert.equal(editable.toISOString(),"2026-01-01T01:00:00.000Z");
-setZone("Europe/Stockholm");
+setZone("Europe/Stockholm",4);
 const dst=new D("2026-03-29T00:30:00.000Z");
 dst.setHours(2);
 assert.equal(dst.getHours(),3);
