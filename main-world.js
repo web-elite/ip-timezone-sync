@@ -163,7 +163,9 @@ function installTimezoneShim(target, timezone, level = 1) {
     }});}catch(_){}
   }
 
-  if(level<=2) return;\n\n  const setterMap={setFullYear:"setUTCFullYear",setMonth:"setUTCMonth",setDate:"setUTCDate",setHours:"setUTCHours",setMinutes:"setUTCMinutes",setSeconds:"setUTCSeconds",setMilliseconds:"setUTCMilliseconds"};
+  if(level<=2) return;
+
+  const setterMap={setFullYear:"setUTCFullYear",setMonth:"setUTCMonth",setDate:"setUTCDate",setHours:"setUTCHours",setMinutes:"setUTCMinutes",setSeconds:"setUTCSeconds",setMilliseconds:"setUTCMilliseconds"};
   for(const [localName,utcName] of Object.entries(setterMap)){
     const nativeUtcSetter=proto[utcName];
     try{Object.defineProperty(proto,localName,{configurable:true,writable:true,value:function(...args){
