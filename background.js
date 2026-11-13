@@ -1,5 +1,5 @@
 const DEFAULTS = {
-  mode: "6h",                 // tab | startup | 1h | 6h | manual
+  mode: "6h",                 // tab | startup | 1h | 6h | manual\n  level: 1,                    // 1 = light, 4 = strict
   refreshHours: 6,
   timezone: "UTC",
   ip: "",
@@ -56,12 +56,12 @@ async function checkAndSave(reason = "manual") {
   return { ...next, reason, changed: old.timezone !== next.timezone || old.ip !== next.ip };
 }
 
-async function notifyTabs(timezone) {
+async function notifyTabs(timezone, level) {
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
     if (!tab.id || !/^https?:/.test(tab.url || "")) continue;
     try {
-      await chrome.tabs.sendMessage(tab.id, { type: "IPTZ_UPDATE", timezone });
+      await chrome.tabs.sendMessage(tab.id, { type: "IPTZ_UPDATE", timezone, level });
     } catch (_) {
       // A tab may not have finished loading or may not have a content script.
     }
@@ -115,7 +115,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     if (message?.type === "GET_CONFIG") {
       const s = await getSettings();
-      sendResponse({ timezone: s.timezone || "UTC" });
+      sendResponse({ timezone: s.timezone || "UTC", level: s.level || 1 });
       return;
     }
     if (message?.type === "GET_STATUS") {
