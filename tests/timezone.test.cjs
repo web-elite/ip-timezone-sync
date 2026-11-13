@@ -46,4 +46,17 @@ const dst=new D("2026-03-29T00:30:00.000Z");
 dst.setHours(2);
 assert.equal(dst.getHours(),3);
 assert.equal(dst.getMinutes(),30);
+
+// Level 1 must leave the Date constructor untouched while applying Intl's default timezone.
+const lightListeners={};
+const light={console,addEventListener:(type,fn)=>(lightListeners[type]||=[]).push(fn),dispatchEvent:()=>true,postMessage:()=>{},CustomEvent:class{constructor(type,init={}){this.type=type;this.detail=init.detail;}}};
+light.window=light;vm.createContext(light);
+light.Date=vm.runInContext("Date",light);light.Intl=vm.runInContext("Intl",light);
+const nativeDateBefore=light.Date;
+vm.runInContext(fs.readFileSync(require.resolve("../main-world.js"),"utf8"),light);
+const lightWindow=vm.runInContext("window",light);
+for(const fn of lightListeners.message||[])fn({source:lightWindow,data:{__iptz_sync__:true,timezone:"Asia/Tehran",level:1}});
+assert.equal(light.Date,nativeDateBefore,"Level 1 must not replace Date");
+assert.equal(new light.Intl.DateTimeFormat("en-US").resolvedOptions().timeZone,"Asia/Tehran","Level 1 must set Intl default timezone");
+
 console.log("Timezone smoke tests passed.");
