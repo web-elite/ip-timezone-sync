@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "IP Timezone Sync",
+  "version": "1.0.0",
+  "description": "Synchronize the browser's JavaScript timezone with the timezone reported for its current public IP.",
+  "permissions": ["storage", "alarms", "tabs"],
+  "host_permissions": [
+    "https://ipwho.is/*",
+    "https://ipapi.co/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "IP Timezone Sync"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["main-world.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ]
+}

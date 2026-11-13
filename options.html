@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IP Timezone Sync Settings</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="options">
+  <main>
+    <header><div class="mark">TZ</div><div><h1>IP Timezone Sync</h1><p>Chromium-based browsers · Manifest V3</p></div></header>
+    <section class="card">
+      <h2>IP check schedule</h2>
+      <label><input type="radio" name="mode" value="tab"> Check when a new tab is opened</label>
+      <label><input type="radio" name="mode" value="startup"> Check when the browser starts</label>
+      <label><input type="radio" name="mode" value="1h"> Every 1 hour</label>
+      <label><input type="radio" name="mode" value="6h"> Every 6 hours</label>
+      <label><input type="radio" name="mode" value="manual"> Manual only</label>
+      <button id="save">Save schedule</button>
+      <span id="saved" class="muted"></span>
+    </section>
+    <section class="card">
+      <h2>Current IP result</h2>
+      <div id="result">Loading…</div>
+      <button id="check">Check IP now</button>
+    </section>
+    <section class="card note">
+      <h2>Important limitations</h2>
+      <ul>
+        <li>The IP lookup runs from the extension service worker and normally follows Chromium's configured proxy or system VPN route. A proxy configured only inside another application may not affect browser traffic.</li>
+        <li>IP geolocation is approximate. Countries with multiple timezones may require a location-aware provider; the returned timezone is the provider's best estimate for the public IP.</li>
+        <li>JavaScript API overrides are compatibility shims, not an operating-system timezone change. Some worker types, cross-origin restrictions, browser internals, and fingerprinting techniques can still reveal inconsistencies.</li>
+        <li>Websites may explicitly request a timezone in Intl options; explicit website-supplied timezones are preserved.</li>
+        <li>IP lookup is sent to ipwho.is, with ipapi.co as fallback. These providers receive the public IP used for the request.</li>
+      </ul>
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IP Timezone Sync</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="popup">
+  <header><div class="mark">TZ</div><div><h1>IP Timezone Sync</h1><p>Timezone from your public IP</p></div></header>
+  <section class="status">
+    <div class="label">Current detected timezone</div>
+    <div id="timezone" class="value">Loading…</div>
+    <div id="country" class="muted"></div>
+    <div id="ip" class="muted"></div>
+    <div id="checked" class="muted"></div>
+    <div id="error" class="error"></div>
+  </section>
+  <button id="check">Check IP now</button>
+  <a href="options.html" target="_blank">Settings</a>
+  <script src="popup.js"></script>
+</body>
+</html>
