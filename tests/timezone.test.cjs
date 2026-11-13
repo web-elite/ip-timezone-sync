@@ -2,6 +2,10 @@ const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const vm=require("node:vm");
 const listeners={};
+const manifest=JSON.parse(fs.readFileSync(require.resolve("../manifest.json"),"utf8"));
+assert.ok(manifest.content_scripts.every(script=>script.all_frames===false),
+  "Content scripts must run only in the top-level frame to avoid multiplying work in iframe-heavy pages");
+
 const sandbox={console,addEventListener:(t,fn)=>(listeners[t]||=[]).push(fn),dispatchEvent:()=>true,postMessage:()=>{},CustomEvent:class{constructor(type,init={}){this.type=type;this.detail=init.detail;}}};
 sandbox.window=sandbox;
 vm.createContext(sandbox);
