@@ -7,6 +7,7 @@ A Manifest V3 Chromium extension that looks up the IANA timezone associated with
 - Manual and scheduled refresh modes.
 - Default timezone for Intl.DateTimeFormat unless the caller explicitly supplies one.
 - Timezone-aware local Date getters, setters, multi-argument construction, and supported local string parsing.
+- Native `Date.parse` fallback for explicit-offset, UTC, and unsupported formats.
 - Historical `Intl.DateTimeFormat` → `Date` parse round-trip coverage, including sub-minute historical offsets.
 - Custom extension icon.
 
@@ -34,4 +35,4 @@ Run the Node.js smoke tests with: node tests/timezone.test.cjs
 They cover Date parsing/construction, historical Intl-to-Date round trips across supported IANA zones, local getters/setters, explicit timezone overrides, UTC invariants, timezone switching, and DST transitions. They are Node-based behavioral tests, not a substitute for testing in Chromium and on target sites.
 
 ## Version
-**1.1.0**
+**1.1.1**

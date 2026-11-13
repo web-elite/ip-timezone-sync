@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "IP Timezone Sync",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Apply the public-IP timezone to selected JavaScript Date and Intl APIs.",
   "permissions": [
     "storage",

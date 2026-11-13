@@ -24,6 +24,10 @@ const historicalText=new I.DateTimeFormat("en",{year:"numeric",month:"numeric",d
 assert.equal(+new D(historicalText),+historical,`Historical Intl-to-Date parse round-trip: ${historicalText}`);
 assert.equal(+new D(new D("7/1/1113")),+historical,"Date object construction must preserve its epoch");
 assert.equal(D.parse(historicalText),+historical,"Date.parse must use the selected local timezone");
+const explicitIso="2026-01-01T00:00:00.000Z";
+assert.equal(D.parse(explicitIso),Date.UTC(2026,0,1),"Date.parse must preserve explicit UTC offsets");
+assert.ok(Number.isNaN(D.parse("this is not a date")),"Date.parse must retain native invalid-date behavior");
+assert.equal(new D(new D(explicitIso)).getTime(),Date.UTC(2026,0,1),"Date constructor must clone a Date instance");
 assert.equal(+new D("2026-01-01T00:00:00"),+new D("1/1/2026"),"timezone-less ISO date-time must be local");
 assert.equal(+new D("2026-01-01"),Date.UTC(2026,0,1),"ISO date-only must retain UTC semantics");
 assert.equal(new D(2026,0,1).getHours(),0,"multi-argument Date constructor must use selected timezone");

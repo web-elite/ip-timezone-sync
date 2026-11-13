@@ -9,14 +9,18 @@ function installTimezoneShim(target, timezone) {
   const DTFRef=target.Intl.DateTimeFormat, NativeDTF=DTFRef.__iptzNative||DTFRef;
   if (DateRef.__iptzTimezone===timezone && NativeDate.__iptzPatched) return;
   const proto=NativeDate.prototype;
+  const nativeGetTime=proto.getTime;
   let originals=NativeDate.__iptzOriginals;
   if (!originals) {
     originals={
       local:Object.fromEntries(["setFullYear","setMonth","setDate","setHours","setMinutes","setSeconds","setMilliseconds","setYear"].map(n=>[n,proto[n]])),
-      locale:Object.fromEntries(["toLocaleString","toLocaleDateString","toLocaleTimeString"].map(n=>[n,proto[n]]))
+      locale:Object.fromEntries(["toLocaleString","toLocaleDateString","toLocaleTimeString"].map(n=>[n,proto[n]])),
+      parse:NativeDate.parse
     };
     Object.defineProperty(NativeDate,"__iptzOriginals",{value:originals});
   }
+  // Migrate metadata created by v1.0.x, which did not store Date.parse.
+  if(typeof originals.parse!=="function") originals.parse=NativeDate.parse;
   const cache=new Map();
   const fmt=(locale="en-US",options={})=>{
     const key=JSON.stringify([locale,options]);
@@ -176,7 +180,7 @@ function installTimezoneShim(target, timezone) {
     construct(Ctor,args,NewTarget){
       const actualNewTarget=NewTarget===DateProxy?NativeDate:NewTarget;
       if(args.length===1){
-        try{return Reflect.construct(Ctor,[nativeGetTime.call(args[0])],actualNewTarget);}catch(_){}
+        try{return Reflect.construct(Ctor,[Reflect.apply(nativeGetTime,args[0],[])],actualNewTarget);}catch(_){}
         if(typeof args[0]==="string"){
           const parsed=parseLocalDateString(args[0]);
           if(parsed.matched)return Reflect.construct(Ctor,[parsed.epoch],actualNewTarget);
