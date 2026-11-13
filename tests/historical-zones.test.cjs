@@ -9,7 +9,7 @@ sandbox.Date=vm.runInContext("Date",sandbox);
 sandbox.Intl=vm.runInContext("Intl",sandbox);
 vm.runInContext(fs.readFileSync(require.resolve("../main-world.js"),"utf8"),sandbox);
 const pageWindow=vm.runInContext("window",sandbox);
-const setZone=timezone=>{for(const fn of listeners.message||[])fn({source:pageWindow,data:{__iptz_sync__:true,timezone}});};
+const setZone=timezone=>{for(const fn of listeners.message||[])fn({source:pageWindow,data:{__iptz_sync__:true,timezone,level:4}});};
 const zones=Intl.supportedValuesOf("timeZone");
 for(const zone of zones){
   setZone(zone);
