@@ -130,6 +130,7 @@ function installTimezoneShim(target, timezone, level = 1) {
   });
   Object.defineProperty(DTFProxy,"__iptzNative",{value:NativeDTF});
   try{target.Intl.DateTimeFormat=DTFProxy;}catch(_){}
+  if(level<=1) return;
 
   const getters={
     getFullYear:d=>Number(partsAt(d).year),getMonth:d=>Number(partsAt(d).month)-1,
@@ -182,6 +183,7 @@ function installTimezoneShim(target, timezone, level = 1) {
     const n=Number(year); if(!Number.isFinite(n))return originals.local.setYear.call(this,year);
     return this.setFullYear(n>=0&&n<=99?n+1900:n);
   }});}catch(_){}
+  if(level<=3) return;
 
   const DateProxy=new Proxy(NativeDate,{
     get(Ctor,property,receiver){
@@ -211,13 +213,14 @@ function installTimezoneShim(target, timezone, level = 1) {
   try{target.Date=DateProxy;}catch(_){}
 }
 
-function apply(timezone){
+function apply(timezone, level = 1){
   if(typeof timezone!=="string"||!timezone)return;
+  level=Math.max(1,Math.min(4,Number(level)||1));
   const DTF=window.Intl.DateTimeFormat,NativeDTF=DTF.__iptzNative||DTF;
   try{new NativeDTF("en-US",{timeZone:timezone});}catch(_){return;}
   currentTimezone=timezone; installTimezoneShim(window,timezone,level); applied=true;
   window.dispatchEvent(new CustomEvent("iptz:updated",{detail:{timezone}}));
-  window.postMessage({[CHANNEL]:true,ack:true,timezone},"*");
+  window.postMessage({[CHANNEL]:true,ack:true,timezone,level},"*");
 }
 window.addEventListener("message",event=>{
   if(event.source===window&&event.data?.[CHANNEL]===true&&typeof event.data.timezone==="string")apply(event.data.timezone,event.data.level);
