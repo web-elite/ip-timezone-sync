@@ -6,7 +6,8 @@ A Manifest V3 Chromium extension that looks up the IANA timezone associated with
 - IP timezone lookup through ipwho.is, with ipapi.co fallback.
 - Manual and scheduled refresh modes.
 - Default timezone for Intl.DateTimeFormat unless the caller explicitly supplies one.
-- Local Date getters, string/locale formatting, and local setters.
+- Timezone-aware local Date getters, setters, multi-argument construction, and supported local string parsing.
+- Historical `Intl.DateTimeFormat` → `Date` parse round-trip coverage, including sub-minute historical offsets.
 - Custom extension icon.
 
 ## Install
@@ -30,7 +31,7 @@ The shim is installed in matching frames where Chromium permits content scripts.
 
 ## Tests
 Run the Node.js smoke tests with: node tests/timezone.test.cjs
-They cover local getters/setters, default Intl timezone, explicit timezone preservation, and a daylight-saving transition. They do not prove compatibility with every browser or site.
+They cover Date parsing/construction, historical Intl-to-Date round trips across supported IANA zones, local getters/setters, explicit timezone overrides, UTC invariants, timezone switching, and DST transitions. They are Node-based behavioral tests, not a substitute for testing in Chromium and on target sites.
 
 ## Version
-**1.0.2**
+**1.1.0**

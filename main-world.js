@@ -40,7 +40,7 @@ function installTimezoneShim(target, timezone) {
   // Ambiguous local times choose the earlier instant; DST gaps move forward.
   const localToEpoch=wall=>{
     const naive=wallEpoch(wall), offsets=new Set();
-    for(let h=-36;h<=36;h+=6) offsets.add(Math.round(offsetAt(new NativeDate(naive+h*3600000))));
+    for(let h=-48;h<=48;h+=3){const value=offsetAt(new NativeDate(naive+h*3600000));if(Number.isFinite(value))offsets.add(value);}
     const exact=[],afterGap=[];
     for(const offset of offsets){
       const candidate=new NativeDate(naive+offset*60000), actual=partsAt(candidate);
@@ -49,7 +49,40 @@ function installTimezoneShim(target, timezone) {
     }
     if(exact.length) return Math.min(...exact);
     if(afterGap.length){afterGap.sort((a,b)=>a.delta-b.delta);return afterGap[0].epoch;}
-    return naive+Math.round(offsetAt(new NativeDate(naive)))*60000;
+    const fallback=offsetAt(new NativeDate(naive));return Number.isFinite(fallback)?naive+fallback*60000:NaN;
+  };
+  // Parse the local wall-time formats emitted by Intl.DateTimeFormat("en", ...).
+  // ISO strings with an explicit offset (or date-only ISO strings) remain native UTC/offset parses.
+  const parseLocalDateString=value=>{
+    const input=value.trim();
+    let m=/^(\d{1,2})\/(\d{1,2})\/(\d{1,6})(?:,\s*(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?\s*(AM|PM)?)?$/i.exec(input);
+    if(m){
+      let hour=Number(m[4]||0);
+      const marker=(m[8]||"").toUpperCase();
+      if(marker){if(hour<1||hour>12)return {matched:true,epoch:NaN};hour=(hour%12)+(marker==="PM"?12:0);}
+      const wall={year:Number(m[3]),month:Number(m[1]),day:Number(m[2]),hour,minute:Number(m[5]||0),second:Number(m[6]||0),millisecond:Number((m[7]||"").padEnd(3,"0")||0)};
+      return {matched:true,epoch:localToEpoch(wall)};
+    }
+    m=/^(\d{4,6})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(input);
+    if(m){
+      const wall={year:Number(m[1]),month:Number(m[2]),day:Number(m[3]),hour:Number(m[4]),minute:Number(m[5]),second:Number(m[6]||0),millisecond:Number((m[7]||"").padEnd(3,"0")||0)};
+      return {matched:true,epoch:localToEpoch(wall)};
+    }
+    return {matched:false,epoch:NaN};
+  };
+  const localNumericConstructor=args=>{
+    const values=args.slice(0,7).map(value=>+value);
+    let [year,month=0,day=1,hour=0,minute=0,second=0,millisecond=0]=values;
+    if(year>=0&&year<=99)year+=1900;
+    const wall=new NativeDate(0);
+    wall.setUTCFullYear(year,month,day);
+    wall.setUTCHours(hour,minute,second,millisecond);
+    if(Number.isNaN(wall.getTime()))return NaN;
+    return localToEpoch({
+      year:wall.getUTCFullYear(),month:wall.getUTCMonth()+1,day:wall.getUTCDate(),
+      hour:wall.getUTCHours(),minute:wall.getUTCMinutes(),second:wall.getUTCSeconds(),
+      millisecond:wall.getUTCMilliseconds()
+    });
   };
   const weekday=s=>["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(s);
   const pad=n=>String(n).padStart(2,"0");
@@ -130,11 +163,29 @@ function installTimezoneShim(target, timezone) {
   }});}catch(_){}
 
   const DateProxy=new Proxy(NativeDate,{
+    get(Ctor,property,receiver){
+      if(property==="__iptzNative")return NativeDate;
+      if(property==="__iptzTimezone")return timezone;
+      if(property==="parse")return function(value){
+        if(typeof value==="string"){const parsed=parseLocalDateString(value);if(parsed.matched)return parsed.epoch;}
+        return Reflect.apply(originals.parse,NativeDate,[value]);
+      };
+      return Reflect.get(Ctor,property,receiver);
+    },
     apply(){return dateString(new NativeDate());},
-    construct(Ctor,args,NewTarget){return Reflect.construct(Ctor,args,NewTarget===DateProxy?NativeDate:NewTarget);}
+    construct(Ctor,args,NewTarget){
+      const actualNewTarget=NewTarget===DateProxy?NativeDate:NewTarget;
+      if(args.length===1){
+        try{return Reflect.construct(Ctor,[nativeGetTime.call(args[0])],actualNewTarget);}catch(_){}
+        if(typeof args[0]==="string"){
+          const parsed=parseLocalDateString(args[0]);
+          if(parsed.matched)return Reflect.construct(Ctor,[parsed.epoch],actualNewTarget);
+        }
+      }
+      if(args.length>=2)return Reflect.construct(Ctor,[localNumericConstructor(args)],actualNewTarget);
+      return Reflect.construct(Ctor,args,actualNewTarget);
+    }
   });
-  Object.defineProperty(DateProxy,"__iptzNative",{value:NativeDate});
-  Object.defineProperty(DateProxy,"__iptzTimezone",{value:timezone});
   Object.defineProperty(NativeDate,"__iptzPatched",{value:true,configurable:true});
   try{target.Date=DateProxy;}catch(_){}
 }

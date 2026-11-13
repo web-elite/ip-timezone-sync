@@ -12,3 +12,4 @@ jobs:
         with:
           node-version: 22
       - run: node tests/timezone.test.cjs
+      - run: node tests/historical-zones.test.cjs
