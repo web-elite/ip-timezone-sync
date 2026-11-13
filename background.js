@@ -52,7 +52,7 @@ async function checkAndSave(reason = "manual") {
     lastError: ""
   };
   await chrome.storage.local.set(next);
-  await notifyTabs(next.timezone);
+  await notifyTabs(next.timezone, next.level || 1);
   return { ...next, reason, changed: old.timezone !== next.timezone || old.ip !== next.ip };
 }
 
