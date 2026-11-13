@@ -2,7 +2,7 @@
 
 A Manifest V3 Chromium extension that looks up the IANA timezone associated with the public IP used by the extension service worker and applies it to selected JavaScript Date and Intl APIs.
 
-## Features
+## Protection levels\nThe default is **Level 1 (Light)** to minimize page overhead. Levels are cumulative:\n- **Level 1 — Light:** overrides only the default timezone used by `Intl.DateTimeFormat`; native `Date` behavior remains unchanged. Lowest overhead, but intentionally partial consistency.\n- **Level 2 — Core Date APIs:** adds local `Date` getters, timezone offset, string methods, and locale methods.\n- **Level 3 — Date setters:** adds timezone-aware local setters.\n- **Level 4 — Full compatibility:** adds the custom `Date` constructor and supported local string parsing. This has the broadest API surface and the highest compatibility/performance risk.\n\nChanging the level in Settings reloads open HTTP(S) tabs so the selected profile is installed cleanly. Higher levels are not guaranteed to be undetectable and can increase CPU use or site incompatibilities.\n\n## Features
 - IP timezone lookup through ipwho.is, with ipapi.co fallback.
 - Manual and scheduled refresh modes.
 - Default timezone for Intl.DateTimeFormat unless the caller explicitly supplies one.
@@ -35,10 +35,10 @@ Run the Node.js smoke tests with: node tests/timezone.test.cjs
 They cover Date parsing/construction, historical Intl-to-Date round trips across supported IANA zones, local getters/setters, explicit timezone overrides, UTC invariants, timezone switching, and DST transitions. They are Node-based behavioral tests, not a substitute for testing in Chromium and on target sites.
 
 ## Version
-**1.1.3**
+**1.2.0**
 
 
-### Performance and scope (1.1.3)
+### Performance and scope (1.2.0)
 - The timezone shim and bridge are injected into the top-level page only; child frames are intentionally excluded to avoid multiplying work across iframe-heavy sites.
 - Formatter instances use a bounded 32-entry LRU cache.
 - Local-time conversion samples three nearby offsets rather than scanning 33 timestamps for every conversion.
