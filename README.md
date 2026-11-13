@@ -35,4 +35,11 @@ Run the Node.js smoke tests with: node tests/timezone.test.cjs
 They cover Date parsing/construction, historical Intl-to-Date round trips across supported IANA zones, local getters/setters, explicit timezone overrides, UTC invariants, timezone switching, and DST transitions. They are Node-based behavioral tests, not a substitute for testing in Chromium and on target sites.
 
 ## Version
-**1.1.1**
+**1.1.2**
+
+
+### Performance and scope (1.1.2)
+- The timezone shim is injected into the top-level page only; child frames are intentionally excluded to avoid multiplying work across iframe-heavy sites.
+- Formatter instances use a bounded 32-entry LRU cache.
+- Local-time conversion samples three nearby offsets rather than scanning 33 timestamps for every conversion.
+- The extension still modifies page-realm JavaScript Date/Intl APIs and may be detectable; it does not change the browser or operating-system timezone.
