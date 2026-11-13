@@ -21,11 +21,21 @@ function installTimezoneShim(target, timezone) {
   }
   // Migrate metadata created by v1.0.x, which did not store Date.parse.
   if(typeof originals.parse!=="function") originals.parse=NativeDate.parse;
+  // Keep a small LRU cache: hostile or highly dynamic pages must not grow it forever.
   const cache=new Map();
+  const MAX_FORMATTERS=32;
   const fmt=(locale="en-US",options={})=>{
     const key=JSON.stringify([locale,options]);
-    if(!cache.has(key)) cache.set(key,new NativeDTF(locale,options));
-    return cache.get(key);
+    if(cache.has(key)){
+      const formatter=cache.get(key);
+      cache.delete(key);
+      cache.set(key,formatter);
+      return formatter;
+    }
+    const formatter=new NativeDTF(locale,options);
+    if(cache.size>=MAX_FORMATTERS) cache.delete(cache.keys().next().value);
+    cache.set(key,formatter);
+    return formatter;
   };
   const partsAt=date=>{
     const out={};
@@ -44,7 +54,12 @@ function installTimezoneShim(target, timezone) {
   // Ambiguous local times choose the earlier instant; DST gaps move forward.
   const localToEpoch=wall=>{
     const naive=wallEpoch(wall), offsets=new Set();
-    for(let h=-48;h<=48;h+=3){const value=offsetAt(new NativeDate(naive+h*3600000));if(Number.isFinite(value))offsets.add(value);}
+    // Three probes cover the offsets on both sides of ordinary DST transitions.
+    // The previous 33-probe scan made every local Date construction needlessly expensive.
+    for(const hours of [-36,0,36]){
+      const value=offsetAt(new NativeDate(naive+hours*3600000));
+      if(Number.isFinite(value)) offsets.add(value);
+    }
     const exact=[],afterGap=[];
     for(const offset of offsets){
       const candidate=new NativeDate(naive+offset*60000), actual=partsAt(candidate);
