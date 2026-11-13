@@ -16,13 +16,13 @@ function show(s) {
 }
 async function load() {
   const s = await chrome.runtime.sendMessage({ type: "GET_STATUS" });
-  document.querySelector(`input[name="mode"][value="${s.mode}"]`)?.click();
+  document.querySelector(`input[name="mode"][value="${s.mode}"]`)?.click();\n  $("level").value = String(s.level || 1);
   show(s);
 }
 $("save").addEventListener("click", async () => {
   const mode = document.querySelector('input[name="mode"]:checked')?.value || "6h";
-  await chrome.runtime.sendMessage({ type: "SAVE_SETTINGS", mode });
-  $("saved").textContent = "Saved";
+  const level = Number($("level").value);\n  await chrome.runtime.sendMessage({ type: "SAVE_SETTINGS", mode, level });
+  $("saved").textContent = "Saved. Open web tabs reloaded if the level changed.";
   setTimeout(() => $("saved").textContent = "", 1800);
 });
 $("check").addEventListener("click", async () => {
