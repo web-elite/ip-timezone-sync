@@ -43,13 +43,13 @@ function installTimezoneShim(target, timezone) {
     for(let h=-36;h<=36;h+=6) offsets.add(Math.round(offsetAt(new NativeDate(naive+h*3600000))));
     const exact=[],afterGap=[];
     for(const offset of offsets){
-      const candidate=new NativeDate(naive-offset*60000), actual=partsAt(candidate);
+      const candidate=new NativeDate(naive+offset*60000), actual=partsAt(candidate);
       if(sameWall(actual,wall)) exact.push(candidate.getTime());
       else { const delta=wallEpoch(actual)-naive; if(delta>0) afterGap.push({delta,epoch:candidate.getTime()}); }
     }
     if(exact.length) return Math.min(...exact);
     if(afterGap.length){afterGap.sort((a,b)=>a.delta-b.delta);return afterGap[0].epoch;}
-    return naive-Math.round(offsetAt(new NativeDate(naive)))*60000;
+    return naive+Math.round(offsetAt(new NativeDate(naive)))*60000;
   };
   const weekday=s=>["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(s);
   const pad=n=>String(n).padStart(2,"0");
