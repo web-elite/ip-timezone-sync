@@ -3,7 +3,7 @@
 const CHANNEL="__iptz_sync__";
 let currentTimezone="UTC", applied=false;
 
-function installTimezoneShim(target, timezone) {
+function installTimezoneShim(target, timezone, level = 1) {
   if (!target || !target.Date || !target.Intl) return;
   const DateRef=target.Date, NativeDate=DateRef.__iptzNative||DateRef;
   const DTFRef=target.Intl.DateTimeFormat, NativeDTF=DTFRef.__iptzNative||DTFRef;
@@ -163,7 +163,7 @@ function installTimezoneShim(target, timezone) {
     }});}catch(_){}
   }
 
-  const setterMap={setFullYear:"setUTCFullYear",setMonth:"setUTCMonth",setDate:"setUTCDate",setHours:"setUTCHours",setMinutes:"setUTCMinutes",setSeconds:"setUTCSeconds",setMilliseconds:"setUTCMilliseconds"};
+  if(level<=2) return;\n\n  const setterMap={setFullYear:"setUTCFullYear",setMonth:"setUTCMonth",setDate:"setUTCDate",setHours:"setUTCHours",setMinutes:"setUTCMinutes",setSeconds:"setUTCSeconds",setMilliseconds:"setUTCMilliseconds"};
   for(const [localName,utcName] of Object.entries(setterMap)){
     const nativeUtcSetter=proto[utcName];
     try{Object.defineProperty(proto,localName,{configurable:true,writable:true,value:function(...args){
@@ -213,12 +213,12 @@ function apply(timezone){
   if(typeof timezone!=="string"||!timezone)return;
   const DTF=window.Intl.DateTimeFormat,NativeDTF=DTF.__iptzNative||DTF;
   try{new NativeDTF("en-US",{timeZone:timezone});}catch(_){return;}
-  currentTimezone=timezone; installTimezoneShim(window,timezone); applied=true;
+  currentTimezone=timezone; installTimezoneShim(window,timezone,level); applied=true;
   window.dispatchEvent(new CustomEvent("iptz:updated",{detail:{timezone}}));
   window.postMessage({[CHANNEL]:true,ack:true,timezone},"*");
 }
 window.addEventListener("message",event=>{
-  if(event.source===window&&event.data?.[CHANNEL]===true&&typeof event.data.timezone==="string")apply(event.data.timezone);
+  if(event.source===window&&event.data?.[CHANNEL]===true&&typeof event.data.timezone==="string")apply(event.data.timezone,event.data.level);
 });
 Object.defineProperty(window,"__IP_TIMEZONE_SYNC__",{configurable:false,value:{get timezone(){return currentTimezone;},get applied(){return applied;}}});
 window.postMessage({[CHANNEL]:true,ready:true},"*");
