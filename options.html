@@ -10,13 +10,24 @@
   <main>
     <header><div class="mark">TZ</div><div><h1>IP Timezone Sync</h1><p>Chromium-based browsers · Manifest V3</p></div></header>
     <section class="card">
+      <h2>Protection level</h2>
+      <label for="level">Timezone API compatibility</label>
+      <select id="level">
+        <option value="1">Level 1 — Light (default)</option>
+        <option value="2">Level 2 — Core Date APIs</option>
+        <option value="3">Level 3 — Date setters</option>
+        <option value="4">Level 4 — Full compatibility</option>
+      </select>
+      <p class="muted">Higher levels override more JavaScript APIs and may increase CPU usage or cause site compatibility issues. Saving a changed level reloads open HTTP(S) tabs.</p>
+    </section>
+    <section class="card">
       <h2>IP check schedule</h2>
       <label><input type="radio" name="mode" value="tab"> Check when a new tab is opened</label>
       <label><input type="radio" name="mode" value="startup"> Check when the browser starts</label>
       <label><input type="radio" name="mode" value="1h"> Every 1 hour</label>
       <label><input type="radio" name="mode" value="6h"> Every 6 hours</label>
       <label><input type="radio" name="mode" value="manual"> Manual only</label>
-      <button id="save">Save schedule</button>
+      <button id="save">Save settings</button>
       <span id="saved" class="muted"></span>
     </section>
     <section class="card">
@@ -29,7 +40,8 @@
       <ul>
         <li>The IP lookup runs from the extension service worker and normally follows Chromium's configured proxy or system VPN route. A proxy configured only inside another application may not affect browser traffic.</li>
         <li>IP geolocation is approximate. Countries with multiple timezones may require a location-aware provider; the returned timezone is the provider's best estimate for the public IP.</li>
-        <li>Protection levels change which page JavaScript APIs are overridden. Level 1 only sets the default timezone for Intl.DateTimeFormat; native Date behavior remains tied to the browser timezone. Higher levels progressively add Date getters, setters, and constructor/parsing behavior.</li>\n        <li>JavaScript API overrides are compatibility shims, not an operating-system timezone change. Some worker types, cross-origin restrictions, browser internals, and fingerprinting techniques can still reveal inconsistencies.</li>
+        <li>Level 1 changes the default timezone used by Intl.DateTimeFormat only; native Date behavior remains tied to the browser timezone. Higher levels progressively add local Date getters, setters, and constructor/parsing behavior.</li>
+        <li>These JavaScript API overrides are compatibility shims, not an operating-system timezone change. Workers, service workers, browser internals, and fingerprinting techniques may reveal inconsistencies.</li>
         <li>Websites may explicitly request a timezone in Intl options; explicit website-supplied timezones are preserved.</li>
         <li>IP lookup is sent to ipwho.is, with ipapi.co as fallback. These providers receive the public IP used for the request.</li>
       </ul>
