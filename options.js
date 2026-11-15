@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
+
 function show(s) {
-  $("result").innerHTML = "";
+  $("result").replaceChildren();
   const lines = [
     `Timezone: ${s.timezone || "—"}`,
     `Country: ${s.country || "—"} (${s.countryCode || "—"})`,
@@ -14,17 +15,25 @@ function show(s) {
     $("result").appendChild(div);
   }
 }
+
 async function load() {
   const s = await chrome.runtime.sendMessage({ type: "GET_STATUS" });
-  document.querySelector(`input[name="mode"][value="${s.mode}"]`)?.click();\n  $("level").value = String(s.level || 1);
+  const mode = document.querySelector(`input[name="mode"][value="${s.mode}"]`);
+  if (mode) mode.checked = true;
+  $("level").value = String(s.level || 1);
   show(s);
 }
+
 $("save").addEventListener("click", async () => {
   const mode = document.querySelector('input[name="mode"]:checked')?.value || "6h";
-  const level = Number($("level").value);\n  await chrome.runtime.sendMessage({ type: "SAVE_SETTINGS", mode, level });
-  $("saved").textContent = "Saved. Open web tabs reloaded if the level changed.";
-  setTimeout(() => $("saved").textContent = "", 1800);
+  const level = Math.max(1, Math.min(4, Number($("level").value) || 1));
+  const result = await chrome.runtime.sendMessage({ type: "SAVE_SETTINGS", mode, level });
+  $("saved").textContent = result?.ok
+    ? "Settings saved. Open web tabs reload if the protection level changed."
+    : "Could not save settings.";
+  setTimeout(() => $("saved").textContent = "", 3000);
 });
+
 $("check").addEventListener("click", async () => {
   $("check").disabled = true;
   $("check").textContent = "Checking…";
@@ -34,4 +43,7 @@ $("check").addEventListener("click", async () => {
   $("check").disabled = false;
   $("check").textContent = "Check IP now";
 });
-load();
+
+load().catch(error => {
+  $("result").textContent = String(error?.message || error);
+});
