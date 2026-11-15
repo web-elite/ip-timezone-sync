@@ -1,5 +1,6 @@
 const DEFAULTS = {
-  mode: "6h",                 // tab | startup | 1h | 6h | manual\n  level: 1,                    // 1 = light, 4 = strict
+  mode: "6h",                 // tab | startup | 1h | 6h | manual
+  level: 1,                    // 1 = light, 4 = strict
   refreshHours: 6,
   timezone: "UTC",
   ip: "",
