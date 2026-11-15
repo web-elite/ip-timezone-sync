@@ -135,9 +135,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const current = await getSettings();
       const mode = ["tab", "startup", "1h", "6h", "manual"].includes(message.mode)
         ? message.mode : current.mode;
-      await chrome.storage.local.set({ ...current, mode });
+      const requestedLevel = Number(message.level);
+      const level = Number.isInteger(requestedLevel)
+        ? Math.max(1, Math.min(4, requestedLevel))
+        : (current.level || 1);
+      await chrome.storage.local.set({ ...current, mode, level });
       await configureAlarm();
-      sendResponse({ ok: true });
+
+      const reloaded = level !== (current.level || 1);
+      if (reloaded) {
+        const tabs = await chrome.tabs.query({});
+        await Promise.all(tabs
+          .filter(tab => tab.id && /^https?:/.test(tab.url || ""))
+          .map(tab => chrome.tabs.reload(tab.id).catch(() => {})));
+      }
+      sendResponse({ ok: true, mode, level, reloaded });
       return;
     }
   })();
