@@ -19,12 +19,37 @@
 
 سطوح تجمعی هستند؛ یعنی هر سطح، قابلیت‌های سطوح پایین‌تر را نیز شامل می‌شود.
 
-| سطح | حالت | APIهای تحت پوشش |
-|---:|---:|---:|
-| **۱** | **سبک (پیش‌فرض)** | فقط منطقه زمانی پیش‌فرض `Intl.DateTimeFormat` را تنظیم می‌کند. رفتار native مربوط به `Date` تغییر نمی‌کند. کم‌فشارترین حالت است، اما ممکن است `Date` و `Intl` منطقه‌های زمانی متفاوتی گزارش کنند. |
-| **۲** | **APIهای اصلی Date** | Getterهای محلی `Date`، متد `getTimezoneOffset()`، متدهای نمایش تاریخ و زمان و متدهای فرمت محلی را اضافه می‌کند. |
-| **۳** | **Date Setters** | Setterهای محلی `Date` را نیز با منطقه زمانی انتخاب‌شده هماهنگ می‌کند. |
-| **۴** | **سازگاری گسترده** | Proxy برای سازنده `Date`، ساخت تاریخ محلی با چند آرگومان و parsing برخی رشته‌های تاریخ محلی را اضافه می‌کند. بیشترین پوشش و در عین حال بیشترین ریسک پردازشی و ناسازگاری را دارد. |
+<table dir="rtl" align="right">
+  <thead>
+    <tr>
+      <th align="right">سطح</th>
+      <th align="right">حالت</th>
+      <th align="right">APIهای تحت پوشش</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="right"><strong>۱</strong></td>
+      <td align="right"><strong>سبک (پیش‌فرض)</strong></td>
+      <td align="right">فقط منطقه زمانی پیش‌فرض <code>Intl.DateTimeFormat</code> را تنظیم می‌کند. رفتار native مربوط به <code>Date</code> تغییر نمی‌کند. کم‌فشارترین حالت است، اما ممکن است <code>Date</code> و <code>Intl</code> منطقه‌های زمانی متفاوتی گزارش کنند.</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>۲</strong></td>
+      <td align="right"><strong>APIهای اصلی Date</strong></td>
+      <td align="right">Getterهای محلی <code>Date</code>، متد <code>getTimezoneOffset()</code>، متدهای نمایش تاریخ و زمان و متدهای فرمت محلی را اضافه می‌کند.</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>۳</strong></td>
+      <td align="right"><strong>Date Setters</strong></td>
+      <td align="right">Setterهای محلی <code>Date</code> را نیز با منطقه زمانی انتخاب‌شده هماهنگ می‌کند.</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>۴</strong></td>
+      <td align="right"><strong>سازگاری گسترده</strong></td>
+      <td align="right">Proxy برای سازنده <code>Date</code>، ساخت تاریخ محلی با چند آرگومان و parsing برخی رشته‌های تاریخ محلی را اضافه می‌کند. بیشترین پوشش و در عین حال بیشترین ریسک پردازشی و ناسازگاری را دارد.</td>
+    </tr>
+  </tbody>
+</table>
 
 برای تغییر سطح، وارد بخش **Settings** افزونه شو، سطح موردنظر را انتخاب کن و روی **Save settings** بزن. با تغییر سطح، تب‌های باز HTTP(S) دوباره بارگذاری می‌شوند تا پروفایل جدید به‌درستی اعمال شود. سطح پیش‌فرض ۱ است.
 
