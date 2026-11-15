@@ -1,45 +1,97 @@
 # IP Timezone Sync
 
-A Manifest V3 Chromium extension that looks up the IANA timezone associated with the public IP used by the extension service worker and applies it to selected JavaScript Date and Intl APIs.
+[فارسی](README.fa.md)
 
-## Protection levels\nThe default is **Level 1 (Light)** to minimize page overhead. Levels are cumulative:\n- **Level 1 — Light:** overrides only the default timezone used by `Intl.DateTimeFormat`; native `Date` behavior remains unchanged. Lowest overhead, but intentionally partial consistency.\n- **Level 2 — Core Date APIs:** adds local `Date` getters, timezone offset, string methods, and locale methods.\n- **Level 3 — Date setters:** adds timezone-aware local setters.\n- **Level 4 — Full compatibility:** adds the custom `Date` constructor and supported local string parsing. This has the broadest API surface and the highest compatibility/performance risk.\n\nChanging the level in Settings reloads open HTTP(S) tabs so the selected profile is installed cleanly. Higher levels are not guaranteed to be undetectable and can increase CPU use or site incompatibilities.\n\n## Features
-- IP timezone lookup through ipwho.is, with ipapi.co fallback.
-- Manual and scheduled refresh modes.
-- Default timezone for Intl.DateTimeFormat unless the caller explicitly supplies one.
-- Timezone-aware local Date getters, setters, multi-argument construction, and supported local string parsing.
-- Native `Date.parse` fallback for explicit-offset, UTC, and unsupported formats.
-- Historical `Intl.DateTimeFormat` → `Date` parse round-trip coverage, including sub-minute historical offsets.
-- Custom extension icon.
+A Chromium Manifest V3 extension that detects the IANA timezone associated with the public IP used by the extension service worker and applies it to selected page-level JavaScript `Intl` and `Date` APIs.
 
-## Install
-1. Download or clone this repository.
-2. Open chrome://extensions (or the equivalent page in Edge/Brave).
-3. Enable Developer mode.
-4. Select Load unpacked and choose the project folder.
+> **Default protection level: Level 1 (Light).** It is designed to keep page overhead low. Higher levels progressively modify more JavaScript APIs and may have a greater performance and compatibility cost.
 
-## Startup timing
-The page-world shim starts at document_start. The isolated-world bridge obtains the saved timezone asynchronously from extension storage and forwards it to the page world. A page that executes timezone-sensitive JavaScript immediately at startup may observe the browser timezone before the update arrives. The bridge uses a readiness handshake, but cannot guarantee that every page script waits for the setting.
+## Features
 
-## Workers and frames
-The shim is installed in matching frames where Chromium permits content scripts. Worker globals are not rewritten. Rewriting arbitrary worker URLs as Blob URLs can break module imports, relative paths, CORS, CSP, and origin semantics, so this version leaves native Worker and SharedWorker loading untouched. Service workers are outside the content-script injection model.
+- Detects the public IP timezone using [ipwho.is](https://ipwho.is/) with [ipapi.co](https://ipapi.co/) as a fallback.
+- Supports manual, browser-startup, new-tab, hourly, and six-hour refresh modes.
+- Provides four configurable protection levels.
+- Preserves an explicit `timeZone` option supplied by a website to `Intl.DateTimeFormat`.
+- Runs the page shim at `document_start` in the top-level frame.
+- Uses a bounded formatter cache and a reduced offset-probing strategy to limit unnecessary work.
 
-## Privacy and limitations
-- Does not change the operating-system or browser-profile timezone.
-- Lookup providers receive the public IP used by the extension service worker; this may differ from a tab-specific proxy or VPN route.
-- IP geolocation is approximate.
-- JavaScript built-in modifications are observable. No fingerprint-resistance, stealth, or fraud-detection bypass is promised.
-- Some browser APIs, workers, service workers, native surfaces, and early startup observations remain outside its coverage.
+## Protection levels
+
+The levels are cumulative: each level includes the behavior of the levels below it.
+
+| Level | Profile | APIs covered |
+|---|---|---|
+| **1** | **Light** (default) | Sets the default timezone for `Intl.DateTimeFormat`. Native `Date` behavior is unchanged. Lowest overhead, but `Date` and `Intl` may report different timezones. |
+| **2** | **Core Date APIs** | Adds local `Date` getters, `getTimezoneOffset()`, date/time string methods, and locale formatting methods. |
+| **3** | **Date setters** | Adds timezone-aware local `Date` setters. |
+| **4** | **Full compatibility** | Adds a `Date` constructor proxy, multi-argument local date construction, and supported local date-string parsing. Broadest coverage and highest performance/compatibility risk. |
+
+To change the level, open the extension's **Settings**, choose a protection level, and click **Save settings**. When the level changes, open HTTP(S) tabs are reloaded so the new profile is applied consistently. The default is Level 1.
+
+**Choosing a level:** use Level 1 for everyday browsing and minimum overhead. Increase the level only on sites that need additional Date/Intl consistency. Level 4 is intended for stricter compatibility tests, not as a recommended global default.
+
+## Installation
+
+1. Download the repository as a ZIP and extract it, or clone it:
+   ```bash
+   git clone https://github.com/web-elite/ip-timezone-sync.git
+   ```
+2. Open `chrome://extensions` in Chrome, or the equivalent extensions page in Edge or Brave.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the extracted project directory.
+5. Open the extension's **Settings** to choose a protection level and IP-check schedule.
+
+## IP-check schedule
+
+- **New tab:** checks when a new tab is created.
+- **Browser startup:** checks when the browser starts.
+- **Every 1 hour / 6 hours:** checks on a repeating schedule.
+- **Manual only:** checks only when **Check IP now** is used.
+
+The lookup runs from the extension service worker. It normally uses the browser's configured proxy or system VPN route; a proxy configured only inside another application may not affect this request.
+
+## How it works
+
+The extension asks an IP geolocation provider for the timezone associated with the public IP seen by the extension service worker. It then passes the resulting IANA timezone (for example, `Europe/Stockholm`) to a small shim running in the page's JavaScript world.
+
+The shim is injected at `document_start`, while the isolated-world bridge reads the saved configuration asynchronously. A page that runs timezone-sensitive code immediately may execute before the saved timezone has reached the page. The readiness handshake reduces timing issues but cannot guarantee that every page waits for the update.
+
+## Privacy
+
+- The extension sends a request to ipwho.is and may use ipapi.co as a fallback.
+- Those providers receive the public IP address used for the lookup.
+- The lookup IP may differ from the IP used by a tab-specific proxy, VPN extension, or application-level tunnel.
+- IP geolocation is approximate. The returned timezone is the provider's estimate for the public IP, not a precise device-location result.
+
+## Limitations and compatibility
+
+- This extension does **not** change the operating-system timezone or the browser profile's native timezone.
+- The shim modifies selected JavaScript APIs in the top-level page. It does not rewrite Worker, SharedWorker, or Service Worker globals.
+- Child frames are intentionally excluded; content scripts run only in the top-level frame.
+- Browser-native surfaces, workers, service workers, early startup observations, and explicit website behavior may expose timezone inconsistencies.
+- JavaScript built-in modifications can be observed. This project does not promise stealth, fingerprint resistance, or bypassing fraud-detection systems.
+- Higher protection levels modify more APIs and can increase CPU use, expose compatibility edge cases, or break site scripts. If a site behaves incorrectly, return to Level 1.
 
 ## Tests
-Run the Node.js smoke tests with: node tests/timezone.test.cjs
-They cover Date parsing/construction, historical Intl-to-Date round trips across supported IANA zones, local getters/setters, explicit timezone overrides, UTC invariants, timezone switching, and DST transitions. They are Node-based behavioral tests, not a substitute for testing in Chromium and on target sites.
+
+Requires Node.js 22 or newer. Run:
+
+```bash
+node tests/timezone.test.cjs
+node tests/historical-zones.test.cjs
+```
+
+The tests cover protection-level behavior, Date parsing and construction, local getters and setters, explicit timezone overrides, UTC invariants, timezone switching, DST behavior, and historical `Intl.DateTimeFormat`-to-`Date` parsing across supported IANA zones.
+
+These are Node.js behavioral tests. They are not a substitute for testing the extension in Chromium and on the websites you use.
+
+## Performance notes
+
+- Content scripts run only in the top-level frame to avoid multiplying work on iframe-heavy pages.
+- `Intl.DateTimeFormat` instances are kept in a bounded 32-entry LRU cache.
+- Local-time conversion samples three nearby offsets instead of scanning 33 timestamps for every conversion.
+- Level 1 avoids replacing the native `Date` constructor and is the lightest profile.
 
 ## Version
+
 **1.2.0**
-
-
-### Performance and scope (1.2.0)
-- The timezone shim and bridge are injected into the top-level page only; child frames are intentionally excluded to avoid multiplying work across iframe-heavy sites.
-- Formatter instances use a bounded 32-entry LRU cache.
-- Local-time conversion samples three nearby offsets rather than scanning 33 timestamps for every conversion.
-- The extension still modifies page-realm JavaScript Date/Intl APIs and may be detectable; it does not change the browser or operating-system timezone.
